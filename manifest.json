@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "yt-dl-ext",
+  "version": "1.0",
+
+  "description": "Allows to download videos with youtube-dl.",
+
+  "permissions":["contextMenus", "tabs", "nativeMessaging"],
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "browser_specific_settings": {
+  "gecko": {
+    "id": "yt-dl-ext@example.com"
+  }
+}
+
+}

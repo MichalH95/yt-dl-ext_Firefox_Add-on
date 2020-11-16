@@ -1,0 +1,7 @@
+{
+  "name": "yt_dl_ext",
+  "description": "Native application for yt-dl-ext",
+  "path": "C:\\Users\\hrusi\\Documents\\Skola\\5. ZS 2020-21\\SMAP\\yt-dl-ext\\native-app\\yt-dl-ext_win.bat",
+  "type": "stdio",
+  "allowed_extensions": [ "yt-dl-ext@example.com" ]
+}
