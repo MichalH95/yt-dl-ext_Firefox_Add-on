@@ -14,11 +14,11 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from pyunpack import Archive
 
+
 # constants
 youtube_dl_url = 'http://yt-dl.org/downloads/latest/youtube-dl.exe'
 ffmpeg_url = 'https://drive.google.com/u/0/uc?id=1npG3IFATsS0kzThlRQRmwZbkO51edbFE'
 ffprobe_url = 'https://drive.google.com/u/0/uc?id=1-1kYakHJn8SAzBxsX6DG9Ll-PP_06ZBG'
-
 
 
 
@@ -57,13 +57,13 @@ def download_youtube_dl():
     send_message("Finished downloading youtube-dl")
 
 
-# check if youtube-dl is updated and if not, update
-def check_youtube_dl_version():
-    send_message("Checking youtube-dl version")
+def update_youtube_dl():
+    send_message("Updating youtube-dl")
     completedProcess = subprocess.run(["youtube-dl.exe", "-U"], capture_output=True, encoding="utf-8")
-    if not re.match("youtube-dl is up-to-date", completedProcess.stdout):
+    if not re.match("youtube-dl is up-to-date", completedProcess.stdout) and completedProcess.returncode != 0 :
+        send_message("youtube-dl -U   failed, downloading youtube-dl manually")
         download_youtube_dl()
-    send_message("Finished checking youtube-dl version")
+    send_message("Finished updating youtube-dl")
 
 
 def download_ffmpeg():
@@ -76,6 +76,7 @@ def download_ffmpeg():
 def extract_ffmpeg():
     Archive("ffmpeg.zip").extractall(".")
     os.remove("ffmpeg.zip")
+
 
 def download_ffprobe():
     send_message("Downloading ffprobe")
@@ -98,24 +99,30 @@ while True:
     if not shutil.which("youtube-dl"):
         download_youtube_dl()
 
-    #if don't have ffmpeg, download it
+    # if don't have ffmpeg, download it
     if not shutil.which("ffmpeg"):
         if not Path("ffmpeg.zip").is_file():
             download_ffmpeg()
         extract_ffmpeg()
 
-    #if don't have ffprobe, download it
+    # if don't have ffprobe, download it
     if not shutil.which("ffprobe"):
         if not Path("ffprobe.zip").is_file():
             download_ffprobe()
         extract_ffprobe()
     
-    # attempt to download the video
+    # download the video
     send_message("Starting video download")
-    #completedProcess = subprocess.run(["youtube-dl.exe", videoURL], capture_output=True, encoding="utf-8")
+    completedProcess = subprocess.run(["youtube-dl", videoURL], capture_output=True, encoding="utf-8")
     #send_message(str(completedProcess))
-    
-    #check_youtube_dl_version()
 
+    if completedProcess.returncode != 0 :
+        send_message("Download failed, trying to update youtube-dl")
+        update_youtube_dl()
+        send_message("Retrying video download after updating youtube-dl")
+        completedProcess = subprocess.run(["youtube-dl", videoURL], capture_output=True, encoding="utf-8")
+        if completedProcess.returncode != 0 :
+            send_message("Video download failed, youtube-dl error output: " + completedProcess.stderr)
 
+    send_message("Finished video download")
 
