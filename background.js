@@ -11,10 +11,10 @@ var port;
 function connectNative() {
 	port = browser.runtime.connectNative("yt_dl_ext");
 	port.onMessage.addListener((response) => {
-	  console.log("yt-dl-ext: Received from native app: " + response);
+	  console.log("yt-dl-ext: Native app said: " + response);
 	});
 	port.onDisconnect.addListener((p) => {
-	  console.log("yt-dl-ext: Disconnected from native app with error: " + p.error);
+	  console.log("yt-dl-ext: Disconnected from native app, error: " + p.error);
 	});
 }
 
