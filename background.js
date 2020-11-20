@@ -7,6 +7,7 @@ browser.contextMenus.create({
 browser.contextMenus.onClicked.addListener(contextMenuAction);
 
 var port;
+var clickedTab;
 
 function connectNative() {
 	port = browser.runtime.connectNative("yt_dl_ext");
@@ -19,9 +20,25 @@ function connectNative() {
 }
 
 function contextMenuAction(info, tab) {
+	clickedTab = tab;
+	querying = browser.tabs.query({highlighted: true, currentWindow: true});
+	querying.then(processTabs, onError);
+}
+
+function processTabs(tabs) {
 	connectNative();
-	
-	console.log("yt-dl-ext: Sending to native app: " + tab.url);
-	port.postMessage(tab.url);
+	if (tabs.length == 1) {
+		console.log("yt-dl-ext: Sending to native app: " + clickedTab.url);
+		port.postMessage(clickedTab.url);
+	} else {
+		for (let tab of tabs) {
+			console.log("yt-dl-ext: Sending to native app: " + tab.url);
+			port.postMessage(tab.url);
+		}
+	}
+}
+
+function onError(error) {
+	console.log("yt-dl-ext: Error getting list of selected tabs: " + error);
 }
 

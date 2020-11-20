@@ -93,7 +93,7 @@ def extract_ffprobe():
 
 while True:
     videoURL = get_message()
-    send_message("URL received")
+    send_message("URL received: " + videoURL)
 
     # if don't have youtube-dl, download it
     if not shutil.which("youtube-dl"):
