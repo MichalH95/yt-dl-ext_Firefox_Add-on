@@ -90,6 +90,25 @@ def extract_ffprobe():
     os.remove("ffprobe.zip")
 
 
+def download_video(videoURL):
+    send_message("Starting video download")
+    downloads_folder = os.path.expanduser("~/Downloads")
+    output_template = downloads_folder + "/%(title)s-%(id)s.%(ext)s"
+
+    completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL], capture_output=True, encoding="utf-8")
+    #send_message(str(completedProcess))
+
+    if completedProcess.returncode != 0 :
+        send_message("Download failed, trying to update youtube-dl")
+        update_youtube_dl()
+        send_message("Retrying video download after updating youtube-dl")
+        completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL], capture_output=True, encoding="utf-8")
+        if completedProcess.returncode != 0 :
+            send_message("Video download failed, youtube-dl error output: " + completedProcess.stderr)
+
+    send_message("Finished video download")
+
+
 
 while True:
     videoURL = get_message()
@@ -112,17 +131,5 @@ while True:
         extract_ffprobe()
     
     # download the video
-    send_message("Starting video download")
-    completedProcess = subprocess.run(["youtube-dl", videoURL], capture_output=True, encoding="utf-8")
-    #send_message(str(completedProcess))
-
-    if completedProcess.returncode != 0 :
-        send_message("Download failed, trying to update youtube-dl")
-        update_youtube_dl()
-        send_message("Retrying video download after updating youtube-dl")
-        completedProcess = subprocess.run(["youtube-dl", videoURL], capture_output=True, encoding="utf-8")
-        if completedProcess.returncode != 0 :
-            send_message("Video download failed, youtube-dl error output: " + completedProcess.stderr)
-
-    send_message("Finished video download")
+    download_video(videoURL)
 
