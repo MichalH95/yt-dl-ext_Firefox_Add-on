@@ -5,7 +5,7 @@
 
   "description": "Allows to download videos with youtube-dl.",
 
-  "permissions":["contextMenus", "tabs", "nativeMessaging"],
+  "permissions":["contextMenus", "tabs", "nativeMessaging", "notifications"],
 
   "background": {
     "scripts": ["background.js"]

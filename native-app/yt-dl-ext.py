@@ -23,7 +23,7 @@ ffprobe_url = 'https://drive.google.com/u/0/uc?id=1-1kYakHJn8SAzBxsX6DG9Ll-PP_06
 
 
 
-# read a message from stdin and decode it.
+# read a message from stdin and decode it
 def get_message():
     raw_length = sys.stdin.buffer.read(4)
 
@@ -34,14 +34,14 @@ def get_message():
     return json.loads(message)
 
 
-# encode a message for transmission, given its content.
+# encode a message for transmission, given its content
 def encode_message(message_content):
     encoded_content = json.dumps(message_content).encode("utf-8")
     encoded_length = struct.pack('=I', len(encoded_content))
     return {'length': encoded_length, 'content': struct.pack(str(len(encoded_content))+"s",encoded_content)}
 
 
-# send an encoded message to stdout.
+# send an encoded message to stdout
 def send_message(message):
     encoded_message = encode_message(message)
     sys.stdout.buffer.write(encoded_message['length'])
