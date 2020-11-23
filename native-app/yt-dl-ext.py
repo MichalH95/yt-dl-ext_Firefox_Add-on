@@ -100,13 +100,14 @@ def download_videos(URLs, title):
                                                         capture_output=True, encoding="utf-8")
 
         if completedProcess.returncode != 0 :
-            send_message("Download failed, trying to update youtube-dl; error: " + completedProcess.stderr)
+            send_message("Download failed with error:\n" + completedProcess.stderr)
+            send_message("Trying to update youtube-dl")
             update_youtube_dl()
             send_message("Retrying video download after updating youtube-dl")
             completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
                                                             capture_output=True, encoding="utf-8")
             if completedProcess.returncode != 0 :
-                send_message("Video download failed, youtube-dl error: " + completedProcess.stderr)
+                send_message("Video download failed with error:\n" + completedProcess.stderr)
 
         send_message("Finished video download")
     send_message("Finished downloading " + title)

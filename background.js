@@ -1,13 +1,25 @@
 browser.contextMenus.create({
 	id: "yt-dl-ext_download",
 	title: "Download with yt-dl-ext",
-	contexts: ["tab"]
+	contexts: ["tab", "link"]
 });
 
 browser.contextMenus.onClicked.addListener(contextMenuAction);
 
+function contextMenuAction(info, tab) {
+	if ( info.linkUrl ) {  // link context menu
+		processLink(info.linkUrl);
+	} else {  // tab context menu
+		clickedTab = tab;
+		var querying = browser.tabs.query({highlighted: true, currentWindow: true});
+		querying.then(processTabs, onTabQueryError);
+	}
+}
+
+
 var port = null;
 var clickedTab;
+var startDlNotificationTimeout = 3000;
 
 function connectNative() {
 	if ( port == null ) {
@@ -24,17 +36,10 @@ function connectNative() {
 	}
 }
 
-function contextMenuAction(info, tab) {
-	clickedTab = tab;
-	var querying = browser.tabs.query({highlighted: true, currentWindow: true});
-	querying.then(processTabs, onTabQueryError);
-}
-
 function processTabs(tabs) {
 	connectNative();
 	var title;
 	var msg;
-	var notificationTimeout = 3000;
 	if (tabs.length == 1) {
 		title = clickedTab.title;
 		msg = 1 + "\n"
@@ -51,7 +56,17 @@ function processTabs(tabs) {
 	}
 	console.log("yt-dl-ext: Sending to native app: " + title);
 	port.postMessage(msg);
-	createNotification("yt-dl-ext: Download starting", title, notificationTimeout);
+	createNotification("yt-dl-ext: Download starting", title, startDlNotificationTimeout);
+}
+
+function processLink(link) {
+	connectNative();
+	var msg = 1 + "\n"
+		+ link + "\n"
+		+ link;
+	console.log("yt-dl-ext: Sending to native app: " + link);
+	port.postMessage(msg);
+	createNotification("yt-dl-ext: Download starting", link, startDlNotificationTimeout);
 }
 
 function onTabQueryError(error) {
