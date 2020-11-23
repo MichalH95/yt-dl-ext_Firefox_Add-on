@@ -90,29 +90,35 @@ def extract_ffprobe():
     os.remove("ffprobe.zip")
 
 
-def download_video(videoURL):
-    send_message("Starting video download")
-    downloads_folder = os.path.expanduser("~/Downloads")
-    output_template = downloads_folder + "/%(title)s-%(id)s.%(ext)s"
+def download_videos(URLs, title):
+    for videoURL in URLs:
+        send_message("Starting video download")
+        downloads_folder = os.path.expanduser("~/Downloads")
+        output_template = downloads_folder + "/%(title)s-%(id)s.%(ext)s"
 
-    completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL], capture_output=True, encoding="utf-8")
-    #send_message(str(completedProcess))
+        completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
+                                                        capture_output=True, encoding="utf-8")
 
-    if completedProcess.returncode != 0 :
-        send_message("Download failed, trying to update youtube-dl")
-        update_youtube_dl()
-        send_message("Retrying video download after updating youtube-dl")
-        completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL], capture_output=True, encoding="utf-8")
         if completedProcess.returncode != 0 :
-            send_message("Video download failed, youtube-dl error output: " + completedProcess.stderr)
+            send_message("Download failed, trying to update youtube-dl; error: " + completedProcess.stderr)
+            update_youtube_dl()
+            send_message("Retrying video download after updating youtube-dl")
+            completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
+                                                            capture_output=True, encoding="utf-8")
+            if completedProcess.returncode != 0 :
+                send_message("Video download failed, youtube-dl error: " + completedProcess.stderr)
 
-    send_message("Finished video download")
-
+        send_message("Finished video download")
+    send_message("Finished downloading " + title)
+    send_message("^%Finished downloading " + title)
 
 
 while True:
-    videoURL = get_message()
-    send_message("URL received: " + videoURL)
+    msg = get_message()
+    msglines = msg.splitlines()
+    send_message("URLs received: " + msglines[0])
+    title = msglines[1]
+    URLs = msglines[2:]
 
     # if don't have youtube-dl, download it
     if not shutil.which("youtube-dl"):
@@ -130,6 +136,6 @@ while True:
             download_ffprobe()
         extract_ffprobe()
     
-    # download the video
-    download_video(videoURL)
+    # download the videos
+    download_videos(URLs, title)
 
