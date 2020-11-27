@@ -25,15 +25,22 @@ function connectNative() {
 	if ( port == null ) {
 		port = browser.runtime.connectNative("yt_dl_ext");
 		port.onMessage.addListener(onNativeAppMessage);
-		port.onDisconnect.addListener((p) => {
-			if ( p.error ) {
-				console.log("yt-dl-ext: Disconnected from native app with error: " + p.error);
-			} else {
-				console.log("yt-dl-ext: Disconnected from native app");
-			}
-			port = null;
-		});
+		port.onDisconnect.addListener(onNativeAppDisconnect);
 	}
+}
+
+function onNativeAppDisconnect(p) {
+	var title = "Disconnected from native app";
+	var msg;
+	if ( p.error ) {
+		console.log("yt-dl-ext: Disconnected from native app with error: " + p.error);
+		msg = "Error: " + p.error;
+	} else {
+		console.log("yt-dl-ext: Disconnected from native app");
+		msg = "No errors";
+	}
+	createNotification(title, msg, 0);
+	port = null;
 }
 
 function processTabs(tabs) {
@@ -74,6 +81,7 @@ function onTabQueryError(error) {
 }
 
 function onNativeAppMessage(response) {
+	// special messages begin with ^%
 	if ( response.substring(0,2) != '^%' ) {
 		console.log("yt-dl-ext: Native app said: " + response);
 		return;
@@ -96,8 +104,11 @@ function createNotification(title, message, timeout) {
 		"iconUrl": null,
 		"title": title,
 		"message": message
-	}).then( (notificationId) =>
-		setTimeout(() => browser.notifications.clear(notificationId), timeout) );
+	}).then( (notificationId) => {
+			if ( timeout > 0 ) {
+				setTimeout(() => browser.notifications.clear(notificationId), timeout)
+			}
+		} );
 }
 
 

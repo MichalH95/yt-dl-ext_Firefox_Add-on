@@ -59,7 +59,7 @@ def download_youtube_dl():
 
 def update_youtube_dl():
     send_message("Updating youtube-dl")
-    completedProcess = subprocess.run(["youtube-dl.exe", "-U"], capture_output=True, encoding="utf-8")
+    completedProcess = subprocess.run(["youtube-dl.exe", "-U"], capture_output=True, text=True)
     if not re.match("youtube-dl is up-to-date", completedProcess.stdout) and completedProcess.returncode != 0 :
         send_message("youtube-dl -U   failed, downloading youtube-dl manually")
         download_youtube_dl()
@@ -91,13 +91,15 @@ def extract_ffprobe():
 
 
 def download_videos(URLs, title):
+    videoNum = 0;
     for videoURL in URLs:
-        send_message("Starting video download")
+        videoNum += 1;
+        send_message("Starting video download " + str(videoNum) + " of " + str(len(URLs)))
         downloads_folder = os.path.expanduser("~/Downloads")
         output_template = downloads_folder + "/%(title)s-%(id)s.%(ext)s"
 
         completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
-                                                        capture_output=True, encoding="utf-8")
+                                                        capture_output=True, text=True)
 
         if completedProcess.returncode != 0 :
             send_message("Download failed with error:\n" + completedProcess.stderr)
@@ -105,11 +107,11 @@ def download_videos(URLs, title):
             update_youtube_dl()
             send_message("Retrying video download after updating youtube-dl")
             completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
-                                                            capture_output=True, encoding="utf-8")
+                                                            capture_output=True, text=True)
             if completedProcess.returncode != 0 :
                 send_message("Video download failed with error:\n" + completedProcess.stderr)
 
-        send_message("Finished video download")
+        send_message("Finished video download " + str(videoNum) + " of " + str(len(URLs)))
     send_message("Finished downloading " + title)
     send_message("^%Finished downloading " + title)
 
