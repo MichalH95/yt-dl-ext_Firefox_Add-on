@@ -20,6 +20,7 @@ function contextMenuAction(info, tab) {
 var port = null;
 var clickedTab;
 var startDlNotificationTimeout = 3000;
+var debug = true;
 
 function connectNative() {
 	if ( port == null ) {
@@ -39,7 +40,9 @@ function onNativeAppDisconnect(p) {
 		console.log("yt-dl-ext: Disconnected from native app");
 		msg = "No errors";
 	}
-	createNotification(title, msg, 0);
+	if ( debug ) {
+		createNotification(title, msg, 0);
+	}
 	port = null;
 }
 
@@ -91,6 +94,10 @@ function onNativeAppMessage(response) {
 		case /^Finished downloading /.test(response):
 			var title = response.substring("Finished downloading ".length);
 			createNotification("yt-dl-ext: Download finished", title, 7000);
+			break;
+		case /^Failed downloading /.test(response):
+			var title = response.substring("Failed downloading ".length);
+			createNotification("yt-dl-ext: Failed downloading", "Failed: " + title, 8000);
 			break;
 		default:
 			console.log("yt-dl-ext: ERROR: unknown message from native app");

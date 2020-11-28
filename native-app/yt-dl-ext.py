@@ -91,29 +91,50 @@ def extract_ffprobe():
 
 
 def download_videos(URLs, title):
+    videosCount = len(URLs);
+    videosCountStr = str(len(URLs));
     videoNum = 0;
+    updated = False;
+    failedCnt = 0;
     for videoURL in URLs:
         videoNum += 1;
-        send_message("Starting video download " + str(videoNum) + " of " + str(len(URLs)))
+        send_message("  Starting video download " + str(videoNum) + " of " + videosCountStr)
         downloads_folder = os.path.expanduser("~/Downloads")
-        output_template = downloads_folder + "/%(title)s-%(id)s.%(ext)s"
+        output_template = downloads_folder + "/yt-dl-ext downloads/%(title)s-%(id)s.%(ext)s"
 
         completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
                                                         capture_output=True, text=True)
 
         if completedProcess.returncode != 0 :
-            send_message("Download failed with error:\n" + completedProcess.stderr)
-            send_message("Trying to update youtube-dl")
-            update_youtube_dl()
-            send_message("Retrying video download after updating youtube-dl")
-            completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
-                                                            capture_output=True, text=True)
-            if completedProcess.returncode != 0 :
-                send_message("Video download failed with error:\n" + completedProcess.stderr)
+            send_message("      Download failed with error:\n" + completedProcess.stderr)
+            if not updated :
+                send_message("      Trying to update youtube-dl")
+                update_youtube_dl()
+                updated = True;
+                send_message("      Retrying video download after updating youtube-dl")
+                completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
+                                                                capture_output=True, text=True)
+                if completedProcess.returncode != 0 :
+                    send_message("      Download after update failed with error:\n" + completedProcess.stderr)
+                    failedCnt += 1;
+                    send_message("  Download failed of video " + str(videoNum) + " of " + videosCountStr)
+                    continue
+            else :
+                failedCnt += 1;
+                send_message("  Download failed of video " + str(videoNum) + " of " + videosCountStr)
+                continue
 
-        send_message("Finished video download " + str(videoNum) + " of " + str(len(URLs)))
-    send_message("Finished downloading " + title)
-    send_message("^%Finished downloading " + title)
+        send_message("  Finished download video " + str(videoNum) + " of " + videosCountStr)
+    if failedCnt > 0 :
+        if videosCount > 1 :
+            send_message("Failed downloading " + str(failedCnt) + " of " + videosCountStr + " videos")
+            send_message("^%Failed downloading " + str(failedCnt) + " of " + videosCountStr + " videos")
+        else :
+            send_message("Failed downloading " + title)
+            send_message("^%Failed downloading " + title)
+    else :
+        send_message("Finished downloading " + title)
+        send_message("^%Finished downloading " + title)
 
 
 while True:
