@@ -22,6 +22,17 @@ var clickedTab;
 var startDlNotificationTimeout = 3000;
 var debug = true;
 
+function getConsoleLogPrefix() {
+	var dt = new Date();
+	var datetime = dt.getFullYear() + "-" + 
+                + (dt.getMonth()+1) + "-"
+		+ dt.getDate() + " "
+                + dt.getHours() + ":"
+                + dt.getMinutes() + ":"
+                + dt.getSeconds();
+	return "yt-dl-ext " + datetime + ": ";
+}
+
 function connectNative() {
 	if ( port == null ) {
 		port = browser.runtime.connectNative("yt_dl_ext");
@@ -34,10 +45,10 @@ function onNativeAppDisconnect(p) {
 	var title = "Disconnected from native app";
 	var msg;
 	if ( p.error ) {
-		console.log("yt-dl-ext: Disconnected from native app with error: " + p.error);
+		console.log(getConsoleLogPrefix() + "Disconnected from native app with error: " + p.error);
 		msg = "Error: " + p.error;
 	} else {
-		console.log("yt-dl-ext: Disconnected from native app");
+		console.log(getConsoleLogPrefix() + "Disconnected from native app");
 		msg = "No errors";
 	}
 	if ( debug ) {
@@ -64,7 +75,7 @@ function processTabs(tabs) {
 				+ tab.url + "\n";
 		}
 	}
-	console.log("yt-dl-ext: Sending to native app: " + title);
+	console.log(getConsoleLogPrefix() + "Sending to native app: " + title);
 	port.postMessage(msg);
 	createNotification("yt-dl-ext: Download starting", title, startDlNotificationTimeout);
 }
@@ -74,19 +85,19 @@ function processLink(link) {
 	var msg = 1 + "\n"
 		+ link + "\n"
 		+ link;
-	console.log("yt-dl-ext: Sending to native app: " + link);
+	console.log(getConsoleLogPrefix() + "Sending to native app: " + link);
 	port.postMessage(msg);
 	createNotification("yt-dl-ext: Download starting", link, startDlNotificationTimeout);
 }
 
 function onTabQueryError(error) {
-	console.log("yt-dl-ext: Error getting list of selected tabs: " + error);
+	console.log(getConsoleLogPrefix() + "Error getting list of selected tabs: " + error);
 }
 
 function onNativeAppMessage(response) {
 	// special messages begin with ^%
 	if ( response.substring(0,2) != '^%' ) {
-		console.log("yt-dl-ext: Native app said: " + response);
+		console.log(getConsoleLogPrefix() + "Native app said: " + response);
 		return;
 	}
 	response = response.substring(2);
@@ -100,7 +111,7 @@ function onNativeAppMessage(response) {
 			createNotification("yt-dl-ext: Failed downloading", "Failed: " + title, 8000);
 			break;
 		default:
-			console.log("yt-dl-ext: ERROR: unknown message from native app");
+			console.log(getConsoleLogPrefix() + "ERROR: unknown message from native app");
 			break;
 	}
 }
