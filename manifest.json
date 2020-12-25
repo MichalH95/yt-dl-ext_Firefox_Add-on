@@ -5,16 +5,20 @@
 
   "description": "Allows to download videos with youtube-dl.",
 
-  "permissions":["contextMenus", "tabs", "nativeMessaging", "notifications"],
+  "permissions":["contextMenus", "tabs", "nativeMessaging", "notifications", "storage"],
 
   "background": {
     "scripts": ["background.js"]
   },
 
   "browser_specific_settings": {
-  "gecko": {
-    "id": "yt-dl-ext@example.com"
+    "gecko": {
+      "id": "yt-dl-ext@example.com"
+    }
+  },
+  
+  "options_ui": {
+  "page": "options.html",
+  "browser_style": true
   }
-}
-
 }

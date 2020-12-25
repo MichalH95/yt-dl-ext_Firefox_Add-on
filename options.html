@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <style>
+      body {
+             margin:10px;
+	     padding:0;
+	     background-color:lightgrey;
+           }
+      p {
+	      font-size: 16px;
+            }
+      label {
+	      font-size: 16px;
+            }
+      input {
+	      margin-left: 15px;
+	      margin-right: 300px;
+	      width: 400px;
+	      height: 30px;
+	      font-size: 16px;
+            }
+      button {
+               background-color: #4CAF50; /* Green */
+               border: none;
+               color: white;
+               padding: 15px 32px;
+               text-align: center;
+               text-decoration: none;
+               display: inline-block;
+               font-size: 16px;
+             }
+    </style>
+  </head>
+
+  <body>
+    <p>Additional command-line options for videos of type:</p>
+    <form>
+      <label>Video<label>
+      <br>
+      <input type="text" id="video"/>
+      <br><br>
+      <label>Music</label>
+      <br>
+      <input type="text" id="music"/>
+      <br><br>
+      <label>Podcast<label>
+      <br>
+      <input type="text" id="podcast"/>
+      <br><br>
+      <label><b>Global options</b><label>
+      <br>
+      <input type="text" id="global"/>
+      <br><br>
+      <button type="submit">Save</button>
+      <p style='display:inline;' id="saved"></p>
+      <br><br>
+      <br><br>
+    </form>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -4,6 +4,8 @@ browser.contextMenus.create({
 	contexts: ["tab", "link"]
 });
 
+browser.storage.onChanged.addListener(processStorageChange);
+
 browser.contextMenus.onClicked.addListener(contextMenuAction);
 
 function contextMenuAction(info, tab) {
@@ -21,16 +23,21 @@ var port = null;
 var clickedTab;
 var startDlNotificationTimeout = 3000;
 var debug = true;
+var notificationPrefix = "yt-dl-ext: ";
 
 function getConsoleLogPrefix() {
 	var dt = new Date();
 	var datetime = dt.getFullYear() + "-" + 
-                + (dt.getMonth()+1) + "-"
-		+ dt.getDate() + " "
-                + dt.getHours() + ":"
-                + dt.getMinutes() + ":"
-                + dt.getSeconds();
+                + twoDigit(dt.getMonth()+1) + "-"
+		+ twoDigit(dt.getDate()) + " "
+                + twoDigit(dt.getHours()) + ":"
+                + twoDigit(dt.getMinutes()) + ":"
+                + twoDigit(dt.getSeconds());
 	return "yt-dl-ext " + datetime + ": ";
+}
+
+function twoDigit(n){
+	return n < 10 ? '0' + n : '' + n ;
 }
 
 function connectNative() {
@@ -65,7 +72,7 @@ function processTabs(tabs) {
 		title = clickedTab.title;
 		msg = 1 + "\n"
 			+ clickedTab.title + "\n"
-			+ clickedTab.url
+			+ clickedTab.url;
 	} else {
 		title = tabs.length + " videos";
 		msg = tabs.length + "\n"
@@ -77,7 +84,7 @@ function processTabs(tabs) {
 	}
 	console.log(getConsoleLogPrefix() + "Sending to native app: " + title);
 	port.postMessage(msg);
-	createNotification("yt-dl-ext: Download starting", title, startDlNotificationTimeout);
+	createNotification(notificationPrefix + "Download starting", title, startDlNotificationTimeout);
 }
 
 function processLink(link) {
@@ -87,7 +94,29 @@ function processLink(link) {
 		+ link;
 	console.log(getConsoleLogPrefix() + "Sending to native app: " + link);
 	port.postMessage(msg);
-	createNotification("yt-dl-ext: Download starting", link, startDlNotificationTimeout);
+	createNotification(notificationPrefix + "Download starting", link, startDlNotificationTimeout);
+}
+
+function processStorageChange(changes, area) {
+	connectNative();
+	console.log(getConsoleLogPrefix() + "Extra command-line arguments change");
+
+	var msg = "^%Extra command-line arguments change" + "\n";
+
+	var changedItems = Object.keys(changes);
+
+	var cnt = 0;
+	for (let item of changedItems) {
+		if ( changes[item].oldValue != changes[item].newValue ) {
+			cnt += 1;
+			msg = msg + item + "\n"
+			          + changes[item].newValue + "\n";
+		}
+	}
+	if ( cnt > 0 ) {
+		console.log(getConsoleLogPrefix() + "Changes: " + msg);
+		port.postMessage(msg);
+	}
 }
 
 function onTabQueryError(error) {
@@ -104,11 +133,11 @@ function onNativeAppMessage(response) {
 	switch (true) {
 		case /^Finished downloading /.test(response):
 			var title = response.substring("Finished downloading ".length);
-			createNotification("yt-dl-ext: Download finished", title, 7000);
+			createNotification(notificationPrefix + "Download finished", title, 7000);
 			break;
 		case /^Failed downloading /.test(response):
 			var title = response.substring("Failed downloading ".length);
-			createNotification("yt-dl-ext: Failed downloading", "Failed: " + title, 8000);
+			createNotification(notificationPrefix + "Failed downloading", "Failed: " + title, 8000);
 			break;
 		default:
 			console.log(getConsoleLogPrefix() + "ERROR: unknown message from native app");

@@ -20,7 +20,11 @@ youtube_dl_url = 'http://yt-dl.org/downloads/latest/youtube-dl.exe'
 ffmpeg_url = 'https://drive.google.com/u/0/uc?id=1npG3IFATsS0kzThlRQRmwZbkO51edbFE'
 ffprobe_url = 'https://drive.google.com/u/0/uc?id=1-1kYakHJn8SAzBxsX6DG9Ll-PP_06ZBG'
 
-
+# extra command-line arguments
+video = ''
+music = ''
+podcast = ''
+globalargs = ''
 
 
 # read a message from stdin and decode it
@@ -137,29 +141,53 @@ def download_videos(URLs, title):
         send_message("^%Finished downloading " + title)
 
 
+def process_cmdlargs_change(changes):
+    for i in range(0, int(len(changes)/2)) :
+        idx = i*2;
+        category = changes[idx]
+        if category == "video" :
+            video = changes[idx+1]
+        elif category == "music" :
+            music = changes[idx+1]
+        elif category == "podcast" :
+            podcast = changes[idx+1]
+        elif category == "global" :
+            globalargs = changes[idx+1]
+
+
 while True:
     msg = get_message()
     msglines = msg.splitlines()
-    send_message("URLs received: " + msglines[0])
-    title = msglines[1]
-    URLs = msglines[2:]
-
-    # if don't have youtube-dl, download it
-    if not shutil.which("youtube-dl"):
-        download_youtube_dl()
-
-    # if don't have ffmpeg, download it
-    if not shutil.which("ffmpeg"):
-        if not Path("ffmpeg.zip").is_file():
-            download_ffmpeg()
-        extract_ffmpeg()
-
-    # if don't have ffprobe, download it
-    if not shutil.which("ffprobe"):
-        if not Path("ffprobe.zip").is_file():
-            download_ffprobe()
-        extract_ffprobe()
     
-    # download the videos
-    download_videos(URLs, title)
+    # special messages begin with ^% on first line
+    first_line = msglines[0]
+    if first_line[0:2] == '^%' :
+        first_line = first_line[2:]
+        if first_line == 'Extra command-line arguments change' :
+            changes = msglines[1:]
+            process_cmdlargs_change(changes)
+    else :
+    # received video URLs
+        send_message("URLs received: " + msglines[0])
+        title = msglines[1]
+        URLs = msglines[2:]
+
+        # if don't have youtube-dl, download it
+        if not shutil.which("youtube-dl"):
+            download_youtube_dl()
+
+        # if don't have ffmpeg, download it
+        if not shutil.which("ffmpeg"):
+            if not Path("ffmpeg.zip").is_file():
+                download_ffmpeg()
+            extract_ffmpeg()
+
+        # if don't have ffprobe, download it
+        if not shutil.which("ffprobe"):
+            if not Path("ffprobe.zip").is_file():
+                download_ffprobe()
+            extract_ffprobe()
+        
+        # download the videos
+        download_videos(URLs, title)
 
