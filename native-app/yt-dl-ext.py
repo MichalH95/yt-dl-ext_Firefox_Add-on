@@ -10,6 +10,7 @@ import shutil
 import io
 import gdown
 import os
+import shlex
 from contextlib import redirect_stdout
 from pathlib import Path
 from pyunpack import Archive
@@ -21,10 +22,10 @@ ffmpeg_url = 'https://drive.google.com/u/0/uc?id=1npG3IFATsS0kzThlRQRmwZbkO51edb
 ffprobe_url = 'https://drive.google.com/u/0/uc?id=1-1kYakHJn8SAzBxsX6DG9Ll-PP_06ZBG'
 
 # extra command-line arguments
-video = ''
-music = ''
-podcast = ''
-globalargs = ''
+videoargs = []
+musicargs = []
+podcastargs = []
+globalargs = []
 
 
 # read a message from stdin and decode it
@@ -55,6 +56,7 @@ def send_message(message):
 
 # download youtube-dl.exe to current directory
 def download_youtube_dl():
+    global youtube_dl_url
     send_message("Downloading youtube-dl")
     r = requests.get(youtube_dl_url, allow_redirects=True)
     open('youtube-dl.exe', 'wb').write(r.content)
@@ -71,6 +73,7 @@ def update_youtube_dl():
 
 
 def download_ffmpeg():
+    global ffmpeg_url
     send_message("Downloading ffmpeg")
     with redirect_stdout(io.StringIO()):
         gdown.download(ffmpeg_url, "ffmpeg.zip")
@@ -83,6 +86,7 @@ def extract_ffmpeg():
 
 
 def download_ffprobe():
+    global ffprobe_url
     send_message("Downloading ffprobe")
     with redirect_stdout(io.StringIO()):
         gdown.download(ffprobe_url, "ffprobe.zip")
@@ -105,9 +109,16 @@ def download_videos(URLs, title):
         send_message("  Starting video download " + str(videoNum) + " of " + videosCountStr)
         downloads_folder = os.path.expanduser("~/Downloads")
         output_template = downloads_folder + "/yt-dl-ext downloads/%(title)s-%(id)s.%(ext)s"
-
-        completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
-                                                        capture_output=True, text=True)
+        vidtitle = get_video_title(videoURL)
+        category = nn_get_video_category(vidtitle)
+        extra_args_array = get_extra_args_array(category)
+        print("extra args: " + str(extra_args_array), file=sys.stderr)
+        ytdlargs = ["youtube-dl", "-o", output_template]
+        ytdlargs.extend(extra_args_array)
+        ytdlargs.extend(globalargs)
+        ytdlargs.append(videoURL)
+        print("ytdlargs: " + str(ytdlargs), file=sys.stderr)
+        completedProcess = subprocess.run(ytdlargs, capture_output=True, text=True)
 
         if completedProcess.returncode != 0 :
             send_message("      Download failed with error:\n" + completedProcess.stderr)
@@ -116,8 +127,7 @@ def download_videos(URLs, title):
                 update_youtube_dl()
                 updated = True;
                 send_message("      Retrying video download after updating youtube-dl")
-                completedProcess = subprocess.run(["youtube-dl", "-o", output_template, videoURL],
-                                                                capture_output=True, text=True)
+                completedProcess = subprocess.run(ytdlargs, capture_output=True, text=True)
                 if completedProcess.returncode != 0 :
                     send_message("      Download after update failed with error:\n" + completedProcess.stderr)
                     failedCnt += 1;
@@ -142,17 +152,41 @@ def download_videos(URLs, title):
 
 
 def process_cmdlargs_change(changes):
+    global videoargs
+    global musicargs
+    global podcastargs
+    global globalargs
     for i in range(0, int(len(changes)/2)) :
         idx = i*2;
         category = changes[idx]
         if category == "video" :
-            video = changes[idx+1]
+            videoargs = shlex.split(changes[idx+1])
         elif category == "music" :
-            music = changes[idx+1]
+            musicargs = shlex.split(changes[idx+1])
         elif category == "podcast" :
-            podcast = changes[idx+1]
+            podcastargs = shlex.split(changes[idx+1])
         elif category == "global" :
-            globalargs = changes[idx+1]
+            globalargs = shlex.split(changes[idx+1])
+
+
+def nn_get_video_category(vidtitle):
+    # TODO predict and get video category from neural network
+    return "video"
+
+
+def get_video_title(videoURL):
+    ytdlargs = ["youtube-dl", "--get-title", videoURL]
+    completedProcess = subprocess.run(ytdlargs, capture_output=True, text=True)
+    return completedProcess.stdout
+
+
+def get_extra_args_array(category):
+    if category == "video" :
+        return videoargs
+    elif category == "music" :
+        return musicargs
+    elif category == "podcast" :
+        return podcastargs
 
 
 while True:

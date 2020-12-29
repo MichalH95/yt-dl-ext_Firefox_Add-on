@@ -4,17 +4,18 @@ browser.contextMenus.create({
 	contexts: ["tab", "link"]
 });
 
-browser.storage.onChanged.addListener(processStorageChange);
+// browser.storage.onChanged.addListener(processStorageChange);
 
 browser.contextMenus.onClicked.addListener(contextMenuAction);
 
 function contextMenuAction(info, tab) {
+	resendStorageToNativeApp();
 	if ( info.linkUrl ) {  // link context menu
 		processLink(info.linkUrl);
 	} else {  // tab context menu
 		clickedTab = tab;
 		var querying = browser.tabs.query({highlighted: true, currentWindow: true});
-		querying.then(processTabs, onTabQueryError);
+		querying.then(processTabs);
 	}
 }
 
@@ -24,6 +25,24 @@ var clickedTab;
 var startDlNotificationTimeout = 3000;
 var debug = true;
 var notificationPrefix = "yt-dl-ext: ";
+
+function resendStorageToNativeApp() {
+	var gettingItem = browser.storage.sync.get(['video', 'music', 'podcast', 'global']);
+	gettingItem.then((results) => {
+		connectNative();
+		console.log(getConsoleLogPrefix() + "Sending extra command-line arguments to native app");
+
+		var msg = "^%Extra command-line arguments change" + "\n";
+
+		var changedItems = Object.keys(results);
+
+		for (let item of changedItems) {
+			msg = msg + item + "\n"
+				  + results[item] + "\n";
+		}
+		port.postMessage(msg);
+	});
+}
 
 function getConsoleLogPrefix() {
 	var dt = new Date();
@@ -97,31 +116,21 @@ function processLink(link) {
 	createNotification(notificationPrefix + "Download starting", link, startDlNotificationTimeout);
 }
 
-function processStorageChange(changes, area) {
-	connectNative();
-	console.log(getConsoleLogPrefix() + "Extra command-line arguments change");
-
-	var msg = "^%Extra command-line arguments change" + "\n";
-
-	var changedItems = Object.keys(changes);
-
-	var cnt = 0;
-	for (let item of changedItems) {
-		if ( changes[item].oldValue != changes[item].newValue ) {
-			cnt += 1;
-			msg = msg + item + "\n"
-			          + changes[item].newValue + "\n";
-		}
-	}
-	if ( cnt > 0 ) {
-		console.log(getConsoleLogPrefix() + "Changes: " + msg);
-		port.postMessage(msg);
-	}
-}
-
-function onTabQueryError(error) {
-	console.log(getConsoleLogPrefix() + "Error getting list of selected tabs: " + error);
-}
+// function processStorageChange(changes, area) {
+// 	connectNative();
+// 	console.log(getConsoleLogPrefix() + "Extra command-line arguments change");
+// 
+// 	var msg = "^%Extra command-line arguments change" + "\n";
+// 
+// 	var changedItems = Object.keys(changes);
+// 
+// 	for (let item of changedItems) {
+// 		msg = msg + item + "\n"
+// 			  + changes[item].newValue + "\n";
+// 	}
+// 	console.log(getConsoleLogPrefix() + "Changes: " + msg);
+// 	port.postMessage(msg);
+// }
 
 function onNativeAppMessage(response) {
 	// special messages begin with ^%
