@@ -1,2 +1,0 @@
-extra args: ['--proxy', '']
-ytdlargs: ['youtube-dl', '-o', 'C:\\Users\\hrusi/Downloads/yt-dl-ext downloads/%(title)s-%(id)s.%(ext)s', '--proxy', '', '--xattrs', 'https://www.youtube.com/watch?v=zOJBGZmCZYU']

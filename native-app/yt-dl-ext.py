@@ -112,12 +112,11 @@ def download_videos(URLs, title):
         vidtitle = get_video_title(videoURL)
         category = nn_get_video_category(vidtitle)
         extra_args_array = get_extra_args_array(category)
-        print("extra args: " + str(extra_args_array), file=sys.stderr)
         ytdlargs = ["youtube-dl", "-o", output_template]
         ytdlargs.extend(extra_args_array)
         ytdlargs.extend(globalargs)
         ytdlargs.append(videoURL)
-        print("ytdlargs: " + str(ytdlargs), file=sys.stderr)
+        print("youtube-dl args: " + str(ytdlargs), file=sys.stderr)
         completedProcess = subprocess.run(ytdlargs, capture_output=True, text=True)
 
         if completedProcess.returncode != 0 :
@@ -170,7 +169,7 @@ def process_cmdlargs_change(changes):
 
 
 def nn_get_video_category(vidtitle):
-    # TODO predict and get video category from neural network
+    # predict and get video category from neural network
     return "video"
 
 

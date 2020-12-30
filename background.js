@@ -6,6 +6,13 @@ browser.contextMenus.create({
 
 // browser.storage.onChanged.addListener(processStorageChange);
 
+browser.browserAction.onClicked.addListener(browserActionListener);
+
+function browserActionListener() {
+	browser.runtime.openOptionsPage();
+}
+
+
 browser.contextMenus.onClicked.addListener(contextMenuAction);
 
 function contextMenuAction(info, tab) {
