@@ -110,7 +110,7 @@ def download_videos(URLs, title):
         downloads_folder = os.path.expanduser("~/Downloads")
         output_template = downloads_folder + "/yt-dl-ext downloads/%(title)s-%(id)s.%(ext)s"
         vidtitle = get_video_title(videoURL)
-        category = nn_get_video_category(vidtitle)
+        category = nn_predict_video_category(vidtitle)
         extra_args_array = get_extra_args_array(category)
         ytdlargs = ["youtube-dl", "-o", output_template]
         ytdlargs.extend(extra_args_array)
@@ -168,15 +168,15 @@ def process_cmdlargs_change(changes):
             globalargs = shlex.split(changes[idx+1])
 
 
-def nn_get_video_category(vidtitle):
-    # predict and get video category from neural network
-    return "video"
-
-
 def get_video_title(videoURL):
     ytdlargs = ["youtube-dl", "--get-title", videoURL]
     completedProcess = subprocess.run(ytdlargs, capture_output=True, text=True)
     return completedProcess.stdout
+
+
+def nn_predict_video_category(vidtitle):
+    # predict and get video category from neural network
+    return "video"
 
 
 def get_extra_args_array(category):
